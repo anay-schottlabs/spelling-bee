@@ -17,7 +17,7 @@ class SpellingBeeApp(App):
     self.MAX_RECORD_TIME = 10          # Maximum duration in seconds for recording
 
     # Create the main layout
-    layout = BoxLayout(orientation='vertical', padding=20, spacing=20)
+    self.layout = BoxLayout(orientation='vertical', padding=20, spacing=20)
 
     # UI Elements
     self.title_label = Label(
@@ -40,11 +40,11 @@ class SpellingBeeApp(App):
     self.button.bind(on_press=self.toggle_recording)
 
     # Add widgets to the layout
-    layout.add_widget(self.title_label)
-    layout.add_widget(self.timer_label)
-    layout.add_widget(self.button)
+    self.layout.add_widget(self.title_label)
+    self.layout.add_widget(self.timer_label)
+    self.layout.add_widget(self.button)
 
-    return layout
+    return self.layout
 
   def toggle_recording(self, instance):
     # Flip the recording state: start if stopped, stop if started
@@ -65,11 +65,52 @@ class SpellingBeeApp(App):
       # Stop the audio recording
       self.recorder.stop_recording()
 
-      # Update UI
-      self.button.text = 'Start Recording'
-
       # Stop updating the timer
       Clock.unschedule(self.update_timer)
+
+      # Show Submit and redo buttons
+      self.show_post_recording_buttons()
+
+  def show_post_recording_buttons(self):
+    # Remove the start/stop button
+    self.layout.remove_widget(self.button)
+
+    # Create Submit and redo buttons
+    self.submit_button = Button(
+      text='Submit',
+      font_size='20sp',
+      size_hint=(1, 0.3)
+    )
+    self.redo_button = Button(
+      text='Redo',
+      font_size='20sp',
+      size_hint=(1, 0.3)
+    )
+
+    self.submit_button.bind(on_press=self.submit)
+    self.redo_button.bind(on_press=self.redo)
+
+    self.layout.add_widget(self.submit_button)
+    self.layout.add_widget(self.redo_button)
+  
+  def redo(self, instance):
+    # Hide the submit and redo buttons
+    self.layout.remove_widget(self.submit_button)
+    self.layout.remove_widget(self.redo_button)
+    # Show the recording button again
+    self.layout.add_widget(self.button)
+    # Start recording again
+    self.toggle_recording(None)
+
+  def submit(self, instance):
+    # Remove Submit and redo buttons, reset timer, and show Start Recording button
+    self.layout.remove_widget(self.submit_button)
+    self.layout.remove_widget(self.redo_button)
+    self.timer_label.text = 'Time: 0.0s'
+    self.button.text = 'Start Recording'
+    self.layout.add_widget(self.button)
+    self.start_time = 0
+    self.recording = False
 
   def update_timer(self, dt):
     # Increment the internal timer
